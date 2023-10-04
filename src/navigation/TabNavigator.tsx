@@ -13,41 +13,40 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import AtmList from '../screen/AtmList';
+import LaporanResult from '../screen/LaporanResult';
+import Camera from '../screen/Camera';
+import GpsValidation from '../screen/GpsValidation';
+import UploadLaporan from '../screen/UploadLaporan';
+import {ScrollView, View, Text} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const HomeStack = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="GameDetails"
-        component={HomeScreen}
-        // options={({route}) => ({
-        //   title: route.params?.title,
-        // })}
-      />
-    </Stack.Navigator>
-  );
-};
+// const UploadStack = () => {
+//   return (
+//     <Stack.Navigator>
+//       <Stack.Screen
+//         name="Home"
+//         component={AtmList}
+//         options={{headerShown: false}}
+//       />
+//     </Stack.Navigator>
+//   );
+// };
 
 const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        // tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarStyle: {backgroundColor: '#f76617'},
         tabBarInactiveTintColor: '#fff',
         tabBarActiveTintColor: 'yellow',
       }}>
       <Tab.Screen
-        name="Home"
+        name="ATM"
         component={AtmList}
         options={({route}) => ({
           tabBarStyle: {

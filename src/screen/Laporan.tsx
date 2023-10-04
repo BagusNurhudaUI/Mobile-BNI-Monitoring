@@ -58,7 +58,7 @@ export default function Laporan() {
     <ScrollView>
       <Background>
         <Logo />
-        <Paragraph>ATM LIST</Paragraph>
+        <Paragraph>REACT NATIVE CAMERA PICKER</Paragraph>
 
         {/* {cameraPhoto && (
           <View>
