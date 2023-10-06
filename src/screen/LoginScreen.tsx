@@ -1,201 +1,181 @@
-import React, {useState, useEffect} from 'react';
+import React, {useContext, useState} from 'react';
 import {
-  TouchableOpacity,
-  StyleSheet,
+  SafeAreaView,
   View,
-  Modal,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Linking,
 } from 'react-native';
-import {ActivityIndicator, Text} from 'react-native-paper';
-import Background from '../components/Background';
-import Logo from '../components/Logo';
-import Header from '../components/Header';
-import Button from '../components/Button';
-import TextInput from '../components/TextInput';
-import BackButton from '../components/BackButton';
-import {theme} from '../core/theme';
+
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Entypo from 'react-native-vector-icons/Entypo';
+
+// import LoginSVG from '../assets/images/misc/login.svg';
+import CustomButton from '../components/CustomButton';
+import InputField from '../components/InputField';
+import {useAuth} from '../context/AuthContext';
 import {emailValidator} from '../helpers/emailValidator';
 import {passwordValidator} from '../helpers/passwordValidator';
-import userRepo from '../api/userRepo';
 import AlertTwoButton from '../components/Alert';
-import {getAuthToken, saveAuthToken} from '../api/authRepo';
+import {StyleSheet} from 'react-native';
+import LoadingView from '../components/LoadingView';
+// import {useNetInfo} from '@react-native-community/netinfo';
 
-type LoginScreenProps = {
-  navigation: {
-    goBack: () => void;
-    reset: (params: {index: number; routes: Array<{name: string}>}) => void;
-    navigate: (routeName: string) => void;
-    replace: (routeName: string) => void;
-  };
-};
-
-export default function LoginScreen({navigation}: LoginScreenProps) {
+const LoginScreen = ({navigation}: any) => {
+  console.log('masuk ke login screen login');
+  const {onLogin} = useAuth();
   const [email, setEmail] = useState({value: '', error: ''});
   const [password, setPassword] = useState({value: '', error: ''});
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const emailError = emailValidator(email.value);
+  const passwordError = passwordValidator(password.value);
 
-  useEffect(() => {
-    const checkLoggedIn = async () => {
-      const authToken = await getAuthToken();
-      if (authToken) {
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Dashboard'}],
-        });
-      }
-    };
+  // const netInfo = useNetInfo();
+  // console.log('INTERNET INFO: ' + netInfo);
 
-    checkLoggedIn();
-  }, [navigation]);
-
-  const onLoginPressed = async () => {
-    console.log({loading});
-
-    // if (loading) return; // If already loading, do nothing
-
-    setLoading(true); // Start loading
-
-    const emailError = emailValidator(email.value);
-    const passwordError = passwordValidator(password.value);
-    console.log({email, password});
-
+  const handleLogin = async () => {
+    setIsLoading(true);
     if (emailError || passwordError) {
       setEmail({...email, error: emailError});
       setPassword({...password, error: passwordError});
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
-    try {
-      console.log('masuk tyr');
+    const hasil = await onLogin!(email.value, password.value);
+    console.log('HASILLL', hasil);
 
-      const hasil = await getData(email.value, password.value);
-      console.log({hasil});
-
-      console.log('status: ' + hasil.status);
-      // console.log('data: ' + JSON.stringify(hasil));
-      console.log({loading});
-      if (hasil.status && hasil.status === 200) {
-        saveAuthToken(hasil.data.token);
-        setLoading(false);
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Dashboard'}],
-        });
-      } else {
-        AlertTwoButton('Gagal Login', hasil?.data?.message || 'Network Error');
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-      // Handle error
-    } finally {
-      setLoading(false);
+    if (hasil.error) {
+      console.log('ERROR');
+      AlertTwoButton('Gagal Login', hasil?.message || 'Network Error');
+    } else if (hasil.status === 200) {
+      console.log('OK');
+    } else {
+      AlertTwoButton('Gagal Login', hasil?.data?.message || 'Network Error');
     }
-  };
-
-  const getData = async (email: string, password: string) => {
-    const data = {
-      email: email,
-      password: password,
-    };
-    console.log({data});
-
-    try {
-      return await userRepo.loginUser(data);
-    } catch (err: any) {
-      return err;
-    }
+    setIsLoading(false);
+    return;
   };
 
   return (
-    // <KeyboardAvoidingView style={{flex: 1}} behavior="padding">
-    // <ScrollView>
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      {loading ? (
+    <SafeAreaView style={{flex: 1, justifyContent: 'center'}}>
+      {/* if loading is true, please make it block y index = 1 */}
+      {isLoading && <LoadingView />}
+
+      <View style={{paddingHorizontal: 25, marginBottom: 50, marginTop: 50}}>
+        <View style={{marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
+          <Text
+            style={{
+              fontFamily: 'Inter-Bold',
+              fontWeight: 'bold',
+              fontSize: 30,
+              color: '#20315f',
+              paddingTop: 30,
+            }}>
+            GME Monitoring
+          </Text>
+        </View>
+        <View style={styles.container}>
+          <Image
+            source={require('../../assets/gme-icon.png')}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
+
+        <InputField
+          label={'Email'}
+          icon={
+            <MaterialCommunityIcons
+              name="email-box"
+              size={20}
+              color="#666"
+              style={{marginRight: 5}}
+            />
+          }
+          keyboardType="default"
+          value={email.value}
+          onChangeText={(text: string) => setEmail({value: text, error: ''})}
+        />
+
+        <InputField
+          label={'Password'}
+          icon={
+            <MaterialCommunityIcons
+              name="onepassword"
+              size={20}
+              color="#666"
+              style={{marginRight: 5}}
+            />
+          }
+          inputType="password"
+          fieldButtonLabel={
+            <Entypo
+              name="eye"
+              size={20}
+              color="#666"
+              style={{marginRight: 20}}
+            />
+          }
+          fieldButtonFunction={() => {
+            console.log('click on eye');
+          }}
+          value={password.value}
+          onChangeText={(text: string) => setPassword({value: text, error: ''})}
+        />
+        {email.error !== '' || password.error !== '' ? (
+          <View style={{marginTop: 0, marginBottom: 20, alignItems: 'center'}}>
+            <Text
+              style={{
+                fontFamily: 'Inter-Bold',
+                fontWeight: 'bold',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                color: 'red',
+              }}>
+              Error : {email.error}, {password.error}
+            </Text>
+          </View>
+        ) : null}
+
+        <CustomButton
+          label={'Login'}
+          onPress={() => {
+            handleLogin();
+          }}
+        />
+
         <View
           style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            flexDirection: 'row',
             justifyContent: 'center',
-            alignItems: 'center',
+            marginBottom: 30,
           }}>
-          <ActivityIndicator animating={loading} size="large" />
+          <Text>Butuh Bantuan Masuk?</Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://wa.me/6287888254504')}>
+            <Text style={{color: '#f76617', fontWeight: '700'}}> Chat</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <Background>
-          {/* <ActivityIndicator animating={loading} size="large" /> */}
-          <Logo />
-          <Header>Welcome back.</Header>
-          <TextInput
-            label="Email"
-            returnKeyType="next"
-            onChangeText={(text: string) => setEmail({value: text, error: ''})}
-            value={email.value}
-            error={!!email.error}
-            errorText={email.error}
-            autoCapitalize="none"
-            autoCompleteType="email"
-            // textContentType="emailAddress"
-            // keyboardType="email-address"
-          />
-          <TextInput
-            label="Password"
-            returnKeyType="done"
-            value={password.value}
-            onChangeText={(text: string) =>
-              setPassword({value: text, error: ''})
-            }
-            error={!!password.error}
-            errorText={password.error}
-            secureTextEntry
-          />
-          {/* <View style={styles.forgotPassword}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ResetPasswordScreen')}>
-          <Text style={styles.forgot}>Forgot your password?</Text>
-        </TouchableOpacity>
-      </View> */}
-          <Button mode="contained" onPress={onLoginPressed}>
-            Login
-          </Button>
-          {/* <View style={styles.row}>
-        <Text>Don’t have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.replace('RegisterScreen')}>
-          <Text style={styles.link}>Sign up</Text>
-        </TouchableOpacity>
-      </View> */}
-        </Background>
-      )}
-    </View>
-    // </ScrollView>
-    // </KeyboardAvoidingView>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
+  container: {
+    flex: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 20,
   },
-  forgotPassword: {
-    width: '100%',
-    alignItems: 'flex-end',
-    marginBottom: 24,
-  },
-  row: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  forgot: {
-    fontSize: 13,
-    color: theme.colors.secondary,
-  },
-  link: {
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+  image: {
+    width: 250,
+    height: 200,
   },
 });
+
+export default LoginScreen;

@@ -8,92 +8,99 @@ import React, {
 } from 'react';
 import {api} from '../api/api';
 import userRepo from '../api/userRepo';
-import {getAuthToken, removeAuthToken, saveAuthToken} from '../api/authRepo';
+import {
+  getAuthToken,
+  removeAuthToken,
+  removeUserInfo,
+  saveAuthToken,
+  saveUserInfo,
+} from '../api/authRepo';
 import AlertTwoButton from '../components/Alert';
 
 interface AuthContextProps {
-  login: (email, password) => void;
-  logout: () => void;
-  isLoading: boolean;
-  userToken: string | null;
+  authState?: {token: string | null; authenticated: boolean | null};
+  onLogin?: (email: string, password: string) => Promise<any>;
+  onLogout?: () => Promise<any>;
+  isLoading?: boolean;
 }
 
-export const AuthContext = createContext<AuthContextProps>({
-  login: (email, password) => {},
-  logout: () => {},
-  isLoading: false,
-  userToken: '',
-});
+const AuthContext = createContext<AuthContextProps>({});
 
-const AuthProvider: React.FC<{children: ReactNode}> = ({
-  children,
-  navigation,
-}: any) => {
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+export default function AuthProvider({children}: any) {
   const [isLoading, setIsLoading] = useState(false);
-  const [userToken, setUserToken] = useState<string | null>('');
+  const [authState, setAuthState] = useState<{
+    token: string | null;
+    authenticated: boolean | null;
+  }>({
+    token: null,
+    authenticated: null,
+  });
 
-  const login = async (email, password) => {
+  useEffect(() => {
+    const loadToken = async () => {
+      const token = await getAuthToken();
+
+      if (token) {
+        setAuthState({
+          token: token,
+          authenticated: true,
+        });
+      }
+    };
     setIsLoading(true);
-    console.log(
-      `masuk login function with email: ${email.value} and password: ${password.value}`,
-    );
-    await userRepo
-      .loginUser({
-        email: email.value,
-        password: password.value,
-      })
-      .then(async user => {
-        console.log(JSON.stringify(user.data));
-        if (user.status === 200) {
-          setUserToken('shakbjhawbda');
-          await saveAuthToken('shakbjhawbda');
-          //   AlertTwoButton('Berhasil', user?.data?.message);
-        } else {
-          AlertTwoButton('Gagal Login', user?.data?.message || 'Network Error');
-          //   navigation.reset({
-          //     index: 0,
-          //     routes: [{name: 'Login'}],
-          //   });
-        }
-      })
-      .catch(error => {})
-      .finally(async () => {
-        console.log(await getAuthToken());
-      });
-
+    loadToken();
     setIsLoading(false);
-  };
+  }, []);
 
-  const logout = async () => {
-    console.log('logout in auth contect');
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
-    setUserToken('');
-    await removeAuthToken();
-    setIsLoading(false);
-  };
-
-  const isLoggedIn = async () => {
     try {
-      setIsLoading(true);
-      let userToken = await getAuthToken();
-      // console.log('user token di isLogged in', userToken);
+      const hasil = await userRepo.loginUser({
+        email: email,
+        password: password,
+      });
+      if (hasil.status === 200) {
+        setAuthState({
+          token: hasil.data.token,
+          authenticated: true,
+        });
 
-      setUserToken(userToken);
+        await saveAuthToken(hasil.data.token);
+        await saveUserInfo(JSON.stringify(hasil.data.user));
+      }
       setIsLoading(false);
+      return hasil;
     } catch (err) {
-      console.log('isLoggedIn error: ' + err);
+      setIsLoading(false);
+      return {
+        error: true,
+        message: err.message,
+      };
     }
   };
 
-  useEffect(() => {
-    isLoggedIn();
-  }, []);
+  const logout = async () => {
+    setIsLoading(true);
+    await removeAuthToken();
+    await removeUserInfo();
 
-  return (
-    <AuthContext.Provider value={{login, logout, isLoading, userToken}}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+    setAuthState({
+      token: null,
+      authenticated: false,
+    });
+    setIsLoading(false);
+  };
 
-export default AuthProvider;
+  const value = {
+    onLogin: login,
+    onLogout: logout,
+    authState,
+    isLoading,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}

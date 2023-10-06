@@ -47,10 +47,19 @@ const removeAuthToken = async () => {
   }
 };
 
+const removeUserInfo = async () => {
+  try {
+    await AsyncStorage.removeItem('userInfo');
+  } catch (error) {
+    console.error('Error removing user info:', error);
+  }
+};
+
 export {
   saveAuthToken,
   getAuthToken,
   removeAuthToken,
   saveUserInfo,
   getUserInfo,
+  removeUserInfo,
 };

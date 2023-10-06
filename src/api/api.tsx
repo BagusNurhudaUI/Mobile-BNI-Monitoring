@@ -18,6 +18,8 @@ export const api = axios.create({
 export const apiClient = baseUrl;
 
 export const handleApiResponse = (response: any) => {
+  console.log('response', response);
+
   if (
     response &&
     response.response &&

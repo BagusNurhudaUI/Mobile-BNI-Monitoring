@@ -6,17 +6,22 @@ import Paragraph from '../components/Paragraph';
 import Button from '../components/Button';
 import {getAuthToken, removeAuthToken, getUserInfo} from '../api/authRepo';
 import {View, Text} from 'react-native';
-import {AuthContext} from '../context/AuthContext';
+import {AuthContext, useAuth} from '../context/AuthContext';
 import userRepo from '../api/userRepo';
+import {useNavigation} from '@react-navigation/native';
 
 export default function Profile({navigation}: any) {
-  const {logout} = useContext(AuthContext);
+  const {onLogout} = useAuth();
   const [user, setUser] = useState('');
 
   const Logout = async () => {
     console.log('Keluar');
     // await removeAuthToken();
-    logout();
+    await onLogout!();
+    // navigation.reset({
+    //   index: 0,
+    //   routes: [{name: 'Login'}],
+    // });
   };
 
   useEffect(() => {
