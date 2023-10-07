@@ -7,12 +7,12 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "releases": "react-native run-android --variant=release"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.19.3",
     "@react-native-community/geolocation": "^3.1.0",
-    "@react-native-community/netinfo": "^9.4.1",
     "@react-navigation/bottom-tabs": "^6.5.9",
     "@react-navigation/drawer": "^6.6.4",
     "@react-navigation/material-bottom-tabs": "^6.2.17",
@@ -32,8 +32,10 @@
     "react-native-paper": "^5.10.6",
     "react-native-safe-area-context": "^4.7.2",
     "react-native-screens": "^3.25.0",
+    "react-native-splash-screen": "^3.3.0",
     "react-native-status-bar-height": "^2.6.0",
     "react-native-sweet-alert": "^3.5.0",
+    "react-native-webview": "^13.6.2",
     "react-navigation": "^5.0.0"
   },
   "devDependencies": {

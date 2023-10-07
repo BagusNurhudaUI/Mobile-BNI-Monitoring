@@ -45,7 +45,6 @@ const LoginScreen = ({navigation}: any) => {
     }
 
     const hasil = await onLogin!(email.value, password.value);
-    console.log('HASILLL', hasil);
 
     if (hasil.error) {
       console.log('ERROR');
@@ -64,7 +63,7 @@ const LoginScreen = ({navigation}: any) => {
       {/* if loading is true, please make it block y index = 1 */}
       {isLoading && <LoadingView />}
 
-      <View style={{paddingHorizontal: 25, marginBottom: 50, marginTop: 50}}>
+      <View style={{paddingHorizontal: 25, marginBottom: 70, marginTop: 0}}>
         <View style={{marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
           <Text
             style={{

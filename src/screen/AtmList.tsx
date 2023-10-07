@@ -26,12 +26,12 @@ export default function AtmList({navigation, route}: any) {
   const [assets, setAssets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState('');
-
-  useFocusEffect(
-    React.useCallback(() => {
-      getAllATM();
-    }, []),
-  );
+  // console.log('ROUTE IN HOME', route);
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     if (route?.params?.screen !== 'GPS') getAllATM();
+  //   }, []),
+  // );
 
   const getAllATM = async () => {
     console.log('fetch Get All ATM');

@@ -12,10 +12,23 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  BackHandler,
+  Dimensions,
+  SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
 import assetRepo from '../api/assetRepo';
 import Geolocation from '@react-native-community/geolocation';
 import AlertTwoButton from '../components/Alert';
+import {AssetModel, defaultAsset} from '../models/assetModel';
+import conn from '../helpers/const';
+import {WebView} from 'react-native-webview';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const RANGE = 0.2; // range is in KM
+
+const height = Dimensions.get('window').height;
+const width = Dimensions.get('window').width;
 
 export default function GpsValidation({navigation, route}: any) {
   const [position, setPosition] = useState<{
@@ -25,20 +38,12 @@ export default function GpsValidation({navigation, route}: any) {
     latitude: null,
     longitude: null,
   });
-  const [asset, setAsset] = useState<{
-    latitude: string | null;
-    longitude: string | null;
-    name: string | null;
-  }>({
-    latitude: null,
-    longitude: null,
-    name: null,
-  });
+  const [asset, setAsset] = useState<AssetModel>(defaultAsset);
   const [inRange, setInRange] = useState(false);
-  // console.log('ROUTE IN GPS VALIDATION', route);
+  const [gpsActive, setGpsActive] = useState(true);
+  const [mylocation, setMyLocation] = useState(false);
   const getCurrentPosition = () => {
-    console.log('getcurrentPosition');
-
+    // console.log('getcurrentPosition');
     Geolocation.getCurrentPosition(
       (pos: any) => {
         setPosition(pos.coords);
@@ -53,6 +58,7 @@ export default function GpsValidation({navigation, route}: any) {
     try {
       const hasil = await assetRepo.getAssetById(route.params.asset.id_asset);
       setAsset(hasil.data.data);
+      setGpsActive(hasil.data.data.gps_active);
     } catch (err) {
       console.log(err);
     }
@@ -71,13 +77,30 @@ export default function GpsValidation({navigation, route}: any) {
         asset.longitude,
         position?.latitude,
         position?.longitude,
-        9,
+        RANGE,
       );
-      console.log(' fetch radius: ' + hasil);
-    }, 2000);
+      // console.log(' fetch radius: ' + hasil);
+      // console.log('is gps active: ' + gpsActive);
+    }, 1000);
 
     return () => clearInterval(interval);
   });
+
+  useEffect(() => {
+    const onBackPress = () => {
+      const data = {message: 'Hello from Screen A!'};
+      navigation.navigate('ATM', {
+        screen: 'GPS',
+      }); // Navigate to Screen B with data
+      return true;
+    };
+
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    };
+  }, [navigation]);
 
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Radius of the Earth in kilometers
@@ -96,64 +119,157 @@ export default function GpsValidation({navigation, route}: any) {
 
   function isWithinRadius(lat1, lon1, lat2, lon2, radius) {
     const distance = calculateDistance(lat1, lon1, lat2, lon2);
-    console.log('Jarak', distance);
+    // console.log('Jarak', distance);
     const hasil = distance <= radius;
     setInRange(hasil);
     return hasil;
   }
 
+  const checkCanUpload = () => {
+    console.log(asset.gps_active);
+
+    if (gpsActive === false || inRange) {
+      navigation.navigate('UploadLaporan', {
+        asset: asset,
+        screen: 'GpsValidation',
+      });
+    } else {
+      AlertTwoButton('Gagal', 'Anda tidak berada dalam range');
+    }
+  };
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Simple Leaflet Map with Marker</title>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+      <style>
+        body { margin: 0; }
+        #map { height: 100vh; }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+      <script>
+      var map = L.map('map').setView(
+        ${
+          !mylocation
+            ? `[${asset.latitude}, ${asset.longitude}]`
+            : `[${position?.latitude}, ${position?.longitude}]`
+        },
+        16
+      );
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      var marker2 = L.marker([${position?.latitude}, ${
+    position?.longitude
+  }]).addTo(map);
+      // marker2.bindPopup("<b>Marker 2</b><br>This is the second marker.").openPopup();
+
+      // Create a circle with a radius of 100 meters (adjust as needed)
+        L.circle([${asset.latitude}, ${asset.longitude}], {
+          color: 'blue',
+          fillColor: 'blue',
+          fillOpacity: 0.2,
+          radius: 200
+        }).addTo(map);
+
+        // Create a custom icon for the GPS marker
+        var gpsIcon = L.icon({
+          iconUrl: 'path_to_gps_icon.png', // Replace with the path to your GPS icon
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        });
+
+      var marker1 = L.marker([${asset.latitude}, ${
+    asset.longitude
+  }]).addTo(map);
+      // marker1.bindPopup("<b>Marker 1</b><br>This is the first marker.").openPopup();
+
+
+      </script>
+    </body>
+    </html>
+  `;
   return (
-    <ScrollView>
-      <Background>
-        <Text> GPS VALIDATION</Text>
-        <Logo />
-        <Paragraph>{asset.name}</Paragraph>
+    <SafeAreaView style={{flex: 1}}>
+      {/* <Paragraph>{asset.name}</Paragraph> */}
+      <WebView
+        source={{
+          // uri: 'https://webgme.bagusnurhuda.site/emrv2/5c402d61a88a5bbac2162a9256249f',
+          html,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          left: 70,
+          zIndex: 1,
+          width: 500,
+        }}>
         <Button
           mode="outlined"
           style={{
             color: 'white',
+            width: '50%',
             backgroundColor:
-              asset.gps_active === false || inRange ? 'yellow' : 'black',
+              gpsActive === false || inRange
+                ? conn.COLOR_ORANGE
+                : conn.COLOR_GREY,
+          }}
+          labelStyle={{
+            fontWeight: 'bold',
+            fontSize: 15,
+            lineHeight: 26,
+            color:
+              gpsActive === false || inRange
+                ? conn.COLOR_GREY
+                : conn.COLOR_VIOLET,
           }}
           onPress={() => {
-            console.log(asset.gps_active);
+            checkCanUpload();
+          }}>
+          {gpsActive === false || inRange ? 'ABSEN' : 'BELUM BISA ABSEN'}
+        </Button>
+      </View>
 
-            if (inRange) {
-              navigation.navigate('UploadLaporan', {
-                asset: asset,
-                screen: 'GpsValidation',
-              });
-            } else {
-              AlertTwoButton('Gagal', 'Anda tidak berada dalam range');
-            }
-          }}>
-          Go to Upload Laporan
-        </Button>
-        <Button
-          mode="outlined"
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 36,
+          left: 335,
+          zIndex: 1,
+          width: 40,
+          height: 40,
+        }}>
+        <TouchableOpacity
           onPress={() => {
-            getCurrentPosition();
+            setMyLocation(true);
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: conn.COLOR_GREY,
+            justifyContent: 'center',
+            alignItems: 'center',
           }}>
-          Get Location
-        </Button>
-        <Text>Latitude: {position?.latitude}</Text>
-        <Text>Longitude: {position?.longitude}</Text>
-        <Button
-          mode="outlined"
-          onPress={() => {
-            const hasil = isWithinRadius(
-              asset.latitude,
-              asset.longitude,
-              position?.latitude,
-              position?.longitude,
-              9,
-            );
-          }}>
-          Get calculate distance
-        </Button>
-        <Text>Masuk Range ?: {inRange ? 'Ya' : 'Tidak'}</Text>
-      </Background>
-    </ScrollView>
+          <MaterialCommunityIcons
+            name="crosshairs-gps"
+            size={21}
+            color={conn.COLOR_ORANGE}
+            style={{marginRight: 5}}
+          />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({

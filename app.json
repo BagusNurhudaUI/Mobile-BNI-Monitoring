@@ -1,4 +1,10 @@
 {
   "name": "AplikasiGME",
-  "displayName": "AplikasiGME"
+  "displayName": "AplikasiGME",
+  "updates": {
+    "fallbackToCacheTimeout": 10000
+  },
+  "android": {
+    "softwareKeyboardLayoutMode": "pan"
+  }
 }

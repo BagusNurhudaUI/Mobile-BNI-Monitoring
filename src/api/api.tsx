@@ -2,7 +2,7 @@ import axios from 'axios';
 import {getAuthToken, saveAuthToken, removeAuthToken} from './authRepo';
 
 let baseUrl: any;
-console.log(process.env.REACT_APP_NODE_ENV);
+// console.log(process.env.REACT_APP_NODE_ENV);
 if (process.env.REACT_APP_NODE_ENV === 'production') {
   baseUrl = process.env.REACT_APP_API_HOST;
 } else if (process.env.REACT_APP_NODE_ENV === 'local') {

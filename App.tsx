@@ -1,13 +1,20 @@
-import React from 'react';
-import {Provider} from 'react-native-paper';
+import React, {useEffect} from 'react';
 import App from './src';
-import {theme} from './src/core/theme';
 import 'react-native-gesture-handler';
+import SplashScreen from 'react-native-splash-screen';
 
-const Main = () => (
-  // <Provider theme={theme}>
-  <App />
-  // </Provider>
-);
+const Main = () => {
+  useEffect(() => {
+    // wait 2 seconds and then hide SplashScreen
+    const timeout = setTimeout(() => {
+      SplashScreen.hide();
+    }, 1500);
+
+    // Clean up the timeout if the component is unmounted before the 2 seconds
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return <App />;
+};
 
 export default Main;

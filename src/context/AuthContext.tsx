@@ -41,15 +41,11 @@ export default function AuthProvider({children}: any) {
   });
 
   useEffect(() => {
-    const loadToken = async () => {
-      const token = await getAuthToken();
-
-      if (token) {
-        setAuthState({
-          token: token,
-          authenticated: true,
-        });
-      }
+    const loadToken = () => {
+      setAuthState({
+        token: null,
+        authenticated: true,
+      });
     };
     setIsLoading(true);
     loadToken();

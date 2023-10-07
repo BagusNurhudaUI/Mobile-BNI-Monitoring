@@ -7,16 +7,16 @@ import {useAuth} from '../context/AuthContext';
 import LoadingView from '../components/LoadingView';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {getAuthToken} from '../api/authRepo';
-
+import SplashScreen from 'react-native-splash-screen';
 const RootStack = createNativeStackNavigator();
 
 export default function AppNav() {
-  const {authState, isLoading} = useAuth();
+  const {authState} = useAuth();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  console.log('Auth State in AppNav: ', authState);
 
   useEffect(() => {
+    console.log('Auth State in AppNav: ', authState);
     const getToken = async () => {
       setLoading(true);
       console.log('di hit setiap login');

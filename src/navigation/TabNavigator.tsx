@@ -14,7 +14,15 @@ import LaporanResult from '../screen/LaporanResult';
 import Camera from '../screen/Camera';
 import GpsValidation from '../screen/GpsValidation';
 import UploadLaporan from '../screen/UploadLaporan';
-import {ScrollView, View, Text} from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  Dimensions,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import Header from '../components/Header';
 import {StatusBar} from 'react-native';
@@ -22,17 +30,17 @@ import {StatusBar} from 'react-native';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// const UploadStack = () => {
-//   return (
-//     <Stack.Navigator>
-//       <Stack.Screen
-//         name="Home"
-//         component={AtmList}
-//         options={{headerShown: false}}
-//       />
-//     </Stack.Navigator>
-//   );
-// };
+const UploadStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Home"
+        component={AtmList}
+        options={{headerShown: false}}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const TabNavigator = () => {
   return (
@@ -43,30 +51,39 @@ const TabNavigator = () => {
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: true,
-          tabBarStyle: {backgroundColor: '#f76617'},
+          tabBarStyle: {
+            backgroundColor: '#f76617',
+          },
           tabBarInactiveTintColor: '#fff',
           tabBarActiveTintColor: 'yellow',
+          // tabBarStyle:{display: none}
         }}>
         <Tab.Screen
           name="ATM"
           component={AtmList}
-          options={({route}) => ({
-            tabBarStyle: {
-              backgroundColor: '#f76617',
-            },
-            tabBarIcon: ({color, size}) => (
-              <Ionicons name="home-outline" color={color} size={size} />
-            ),
-          })}
+          options={({navigation, route}) => {
+            console.log('ROUTE IN NAV', route); // Log the route object
+
+            return {
+              title: 'Home',
+              tabBarIcon: ({color = 'blue', size}) => (
+                <Ionicons name="home-outline" color={color} size={size} />
+              ),
+            };
+          }}
         />
         <Tab.Screen
           name="Cart"
           component={Laporan}
-          options={{
-            tabBarBadgeStyle: {backgroundColor: 'yellow'},
-            tabBarIcon: ({color, size}) => (
-              <Feather name="shopping-bag" color={color} size={size} />
-            ),
+          options={({navigation, route}) => {
+            console.log('ROUTE IN NAV', route); // Log the route object
+
+            return {
+              title: 'Laporan',
+              tabBarIcon: ({color = 'blue', size}) => (
+                <Feather name="shopping-bag" color={color} size={size} />
+              ),
+            };
           }}
         />
         <Tab.Screen
@@ -90,14 +107,6 @@ const TabNavigator = () => {
       </Tab.Navigator>
     </View>
   );
-};
-
-const getTabBarVisibility = (route: any) => {
-  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Feed';
-  if (routeName == 'GameDetails') {
-    return 'none';
-  }
-  return 'flex';
 };
 
 export default TabNavigator;
