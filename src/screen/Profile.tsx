@@ -6,13 +6,14 @@ import Paragraph from '../components/Paragraph';
 import Button from '../components/Button';
 import {getAuthToken, removeAuthToken, getUserInfo} from '../api/authRepo';
 import {View, Text} from 'react-native';
-import {AuthContext, useAuth} from '../context/AuthContext';
+import {useAuth} from '../context/AuthContext';
 import userRepo from '../api/userRepo';
 import {useNavigation} from '@react-navigation/native';
+import {UserData, defaultUserData} from '../models/userModel';
 
 export default function Profile({navigation}: any) {
   const {onLogout} = useAuth();
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState<UserData>(defaultUserData);
 
   const Logout = async () => {
     console.log('Keluar');
@@ -28,7 +29,10 @@ export default function Profile({navigation}: any) {
     const fetchUserInfo = async () => {
       console.log('first render user');
       const user = await getUserInfo();
-      setUser(JSON.parse(user));
+      console.log('user: ' + user);
+      if (user) {
+        setUser(JSON.parse(user));
+      }
     };
 
     fetchUserInfo();

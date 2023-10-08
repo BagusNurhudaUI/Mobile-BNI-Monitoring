@@ -1,54 +1,63 @@
+import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useState, useEffect} from 'react';
-import Background from '../components/Background';
-import Logo from '../components/Logo';
-import Header from '../components/Header';
-import Paragraph from '../components/Paragraph';
-import Button from '../components/Button';
-import {PermissionsAndroid, Image, View, Text, ScrollView} from 'react-native';
-import {launchCamera} from 'react-native-image-picker';
-import jenisDokumentasiRepo from '../api/jenisDokumentasiRepo';
-import {RNCamera} from 'react-native-camera';
-import {useCamera} from 'react-native-camera-hooks';
+import laporanRepo from '../api/laporanRepo';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {LaporanDetailModel} from '../models/laporanModel';
 
-export default function LaporanResult(navigation: any) {
-  const [cameraPhoto, setCameraPhoto] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [jenisdokumentasi, setJenisdokumentasi] = useState([]);
+const Result = ({navigation}) => {
+  const [laporans, setLaporans] = useState([]);
 
-  const [{cameraRef}, {takePicture}] = useCamera(undefined);
-
-  const openCamera = () => {
-    console.log('openCamera result: ');
+  const fetchLaporan = async () => {
+    console.log('running fetchLaporan');
+    try {
+      const hasil = await laporanRepo.getReports({});
+      if (hasil.status === 200) {
+        setLaporans(hasil.data.data);
+      } else {
+        console.log('error fetchLaporan');
+      }
+    } catch (err) {
+      console.log('error on fetchLaporan', err);
+    }
   };
 
-  const getJenisDokumentasi = async () => {
-    const hasil = await jenisDokumentasiRepo.getJenisDokumentasi({
-      params: {
-        active: true,
-      },
-    });
-    console.log(hasil.data.data);
-    setJenisdokumentasi(hasil.data.data);
+  const handleButtonClick = id => {
+    console.log('buttonClick to report details...');
+
+    try {
+      navigation.navigate('LaporanResultDetail', {id: id});
+    } catch (err) {}
   };
 
   useEffect(() => {
-    getJenisDokumentasi();
+    fetchLaporan();
   }, []);
   return (
-    <ScrollView>
-      <Background>
-        <Logo />
-        <Paragraph>REACT NATIVE CAMERA</Paragraph>
+    <View>
+      <Text>LaporanResult</Text>
+      {laporans.map((laporan: LaporanDetailModel, i) => (
+        <TouchableOpacity
+          key={i}
+          onPress={() => handleButtonClick(laporan.id_laporan)}>
+          <Text>{laporan.asset_name}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
 
-        <Button
-          mode="outlined"
-          onPress={() => {
-            openCamera();
-            navigation.navigate('Camera');
-          }}>
-          Open Camera
-        </Button>
-      </Background>
-    </ScrollView>
+const StackLaporanResult = createNativeStackNavigator();
+
+export default function LaporanResult() {
+  console.log('app stack');
+
+  return (
+    <StackLaporanResult.Navigator>
+      <StackLaporanResult.Screen
+        name="LaporanResultPage"
+        component={Result}
+        options={{headerShown: false}}
+      />
+    </StackLaporanResult.Navigator>
   );
 }

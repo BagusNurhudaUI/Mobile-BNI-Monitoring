@@ -1,14 +1,50 @@
 import React from 'react';
 import {View, StyleSheet, Button, Alert} from 'react-native';
 
-const AlertTwoButton = (title: string, message: string) =>
+export const AlertTwoButton = (
+  title: string,
+  message: string,
+  onOkPress?: () => void,
+  onCancelPress?: () => void,
+  textCancel?: string,
+  textOK?: string,
+) =>
   Alert.alert(title, message, [
     {
-      text: 'Cancel',
-      onPress: () => console.log('Cancel Pressed'),
+      text: textCancel ? textCancel : 'Cancel',
+      onPress: () => {
+        console.log('Cancel Pressed');
+        if (onCancelPress) {
+          onCancelPress();
+        }
+      },
       style: 'cancel',
     },
-    {text: 'OK', onPress: () => console.log('OK Pressed')},
+    {
+      text: textOK ? textOK : 'OK',
+      onPress: () => {
+        console.log('OK Pressed');
+        if (onOkPress) {
+          onOkPress();
+        }
+      },
+    },
   ]);
 
-export default AlertTwoButton;
+export const AlertOneButton = (
+  title: string,
+  message: string,
+  onOkPress?: () => void,
+  textOK?: string,
+) =>
+  Alert.alert(title, message, [
+    {
+      text: textOK ? textOK : 'OK',
+      onPress: () => {
+        console.log('OK Pressed');
+        if (onOkPress) {
+          onOkPress();
+        }
+      },
+    },
+  ]);

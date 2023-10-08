@@ -1,8 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import Background from '../components/Background';
-import Logo from '../components/Logo';
-import Header from '../components/Header';
-import Paragraph from '../components/Paragraph';
 import Button from '../components/Button';
 import {
   PermissionsAndroid,
@@ -19,16 +15,13 @@ import {
 } from 'react-native';
 import assetRepo from '../api/assetRepo';
 import Geolocation from '@react-native-community/geolocation';
-import AlertTwoButton from '../components/Alert';
 import {AssetModel, defaultAsset} from '../models/assetModel';
 import conn from '../helpers/const';
 import {WebView} from 'react-native-webview';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {AlertTwoButton} from '../components/Alert';
 
 const RANGE = 0.2; // range is in KM
-
-const height = Dimensions.get('window').height;
-const width = Dimensions.get('window').width;
 
 export default function GpsValidation({navigation, route}: any) {
   const [position, setPosition] = useState<{
@@ -42,14 +35,21 @@ export default function GpsValidation({navigation, route}: any) {
   const [inRange, setInRange] = useState(false);
   const [gpsActive, setGpsActive] = useState(true);
   const [mylocation, setMyLocation] = useState(false);
+
   const getCurrentPosition = () => {
-    // console.log('getcurrentPosition');
     Geolocation.getCurrentPosition(
       (pos: any) => {
+        // console.log('LOKASI', pos.coords);
+
         setPosition(pos.coords);
       },
       error => console.log(error),
-      {enableHighAccuracy: true},
+      {
+        enableHighAccuracy: true,
+        // timeout: 20000,
+        // maximumAge: 1000,
+        // distanceFilter: 10,
+      },
     );
   };
 
@@ -72,7 +72,7 @@ export default function GpsValidation({navigation, route}: any) {
   useEffect(() => {
     const interval = setInterval(() => {
       getCurrentPosition();
-      const hasil = isWithinRadius(
+      isWithinRadius(
         asset.latitude,
         asset.longitude,
         position?.latitude,
@@ -119,15 +119,14 @@ export default function GpsValidation({navigation, route}: any) {
 
   function isWithinRadius(lat1, lon1, lat2, lon2, radius) {
     const distance = calculateDistance(lat1, lon1, lat2, lon2);
-    // console.log('Jarak', distance);
     const hasil = distance <= radius;
+    console.log({lat1, lon1, lat2, lon2});
+    // console.log('HASIL RANGE: ' + distance + 'radius: ' + radius);
+
     setInRange(hasil);
-    return hasil;
   }
 
   const checkCanUpload = () => {
-    console.log(asset.gps_active);
-
     if (gpsActive === false || inRange) {
       navigation.navigate('UploadLaporan', {
         asset: asset,
@@ -162,16 +161,25 @@ export default function GpsValidation({navigation, route}: any) {
             ? `[${asset.latitude}, ${asset.longitude}]`
             : `[${position?.latitude}, ${position?.longitude}]`
         },
-        16
+        17
       );
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
-      var marker2 = L.marker([${position?.latitude}, ${
-    position?.longitude
-  }]).addTo(map);
-      // marker2.bindPopup("<b>Marker 2</b><br>This is the second marker.").openPopup();
+      var gpsIconUrl = 'https://storage.googleapis.com/bni-gme/2074172.png';
+      var gpsIcon = L.icon({
+        iconUrl: gpsIconUrl,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+      });
+      
+      var marker2 = L.marker([${position?.latitude}, ${position?.longitude}], {
+        icon: gpsIcon
+      }).addTo(map);
+      if (${mylocation}) {
+        marker2.bindPopup("<b>Posisi Anda!</b>", { offset: [0, -20] }).openPopup();
+        }
+      
 
       // Create a circle with a radius of 100 meters (adjust as needed)
         L.circle([${asset.latitude}, ${asset.longitude}], {
@@ -181,29 +189,24 @@ export default function GpsValidation({navigation, route}: any) {
           radius: 200
         }).addTo(map);
 
-        // Create a custom icon for the GPS marker
-        var gpsIcon = L.icon({
-          iconUrl: 'path_to_gps_icon.png', // Replace with the path to your GPS icon
-          iconSize: [32, 32],
-          iconAnchor: [16, 32]
-        });
+        
 
       var marker1 = L.marker([${asset.latitude}, ${
     asset.longitude
   }]).addTo(map);
-      // marker1.bindPopup("<b>Marker 1</b><br>This is the first marker.").openPopup();
-
-
+  if (${!mylocation}) {
+    marker1.bindPopup("<b>Posisi ATM!</b>").openPopup();
+  }
+  
       </script>
     </body>
     </html>
   `;
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <Paragraph>{asset.name}</Paragraph> */}
+      {/* <Image source={gps_icon} /> */}
       <WebView
         source={{
-          // uri: 'https://webgme.bagusnurhuda.site/emrv2/5c402d61a88a5bbac2162a9256249f',
           html,
         }}
       />
@@ -223,7 +226,7 @@ export default function GpsValidation({navigation, route}: any) {
             backgroundColor:
               gpsActive === false || inRange
                 ? conn.COLOR_ORANGE
-                : conn.COLOR_GREY,
+                : conn.COLOR_WHITE_GREY,
           }}
           labelStyle={{
             fontWeight: 'bold',
@@ -231,8 +234,8 @@ export default function GpsValidation({navigation, route}: any) {
             lineHeight: 26,
             color:
               gpsActive === false || inRange
-                ? conn.COLOR_GREY
-                : conn.COLOR_VIOLET,
+                ? conn.COLOR_WHITE_GREY
+                : conn.COLOR_ORANGE,
           }}
           onPress={() => {
             checkCanUpload();
@@ -249,15 +252,19 @@ export default function GpsValidation({navigation, route}: any) {
           zIndex: 1,
           width: 40,
           height: 40,
+          borderColor: 'black', // Added borderColor
+          borderWidth: 1, // Added borderWidth
+          borderRadius: 10, // Added borderRadius (half of width and height to make it circular)
+          overflow: 'hidden',
         }}>
         <TouchableOpacity
           onPress={() => {
-            setMyLocation(true);
+            setMyLocation(!mylocation);
           }}
           style={{
             width: '100%',
             height: '100%',
-            backgroundColor: conn.COLOR_GREY,
+            backgroundColor: conn.COLOR_WHITE_GREY,
             justifyContent: 'center',
             alignItems: 'center',
           }}>
@@ -265,7 +272,6 @@ export default function GpsValidation({navigation, route}: any) {
             name="crosshairs-gps"
             size={21}
             color={conn.COLOR_ORANGE}
-            style={{marginRight: 5}}
           />
         </TouchableOpacity>
       </View>

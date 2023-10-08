@@ -18,7 +18,7 @@ import InputField from '../components/InputField';
 import {useAuth} from '../context/AuthContext';
 import {emailValidator} from '../helpers/emailValidator';
 import {passwordValidator} from '../helpers/passwordValidator';
-import AlertTwoButton from '../components/Alert';
+import {AlertTwoButton} from '../components/Alert';
 import {StyleSheet} from 'react-native';
 import LoadingView from '../components/LoadingView';
 // import {useNetInfo} from '@react-native-community/netinfo';

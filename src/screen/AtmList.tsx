@@ -21,6 +21,8 @@ import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {useIsFocused, useFocusEffect} from '@react-navigation/native';
 import conn from '../helpers/const';
 import LoadingView from '../components/LoadingView';
+import axios from 'axios';
+import {api} from '../api/api';
 
 export default function AtmList({navigation, route}: any) {
   const [assets, setAssets] = useState([]);
@@ -48,7 +50,7 @@ export default function AtmList({navigation, route}: any) {
         console.log('something wrong calls on getAllAtm');
       }
       setIsLoading(false);
-    } catch (err) {
+    } catch (error) {
       setIsLoading(false);
     } finally {
       setIsLoading(false);

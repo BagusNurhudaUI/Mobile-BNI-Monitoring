@@ -3,10 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Leaflet Map</title>
+    <title>Simple Leaflet Map with Marker</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Font Awesome CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0-beta3/css/all.min.css"
+      rel="stylesheet" />
     <style>
       body {
         margin: 0;
@@ -18,14 +22,41 @@
   </head>
   <body>
     <div id="map"></div>
-
+    <!-- -6.434691533069457, 106.85607086262274 -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0-beta3/js/all.min.js"></script>
     <script>
-      var map = L.map('map').setView([51.505, -0.09], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      var map = L.map('map').setView(
+        [-6.434691533069457, 106.85607086262274],
+        16,
+      );
+      L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {},
+      ).addTo(map);
+
+      var gpsIconUrl = './assets/gps-icon-circle.png';
+      var gpsIcon = L.icon({
+        iconUrl: gpsIconUrl,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+      });
+
+      var marker2 = L.marker([-6.42346231069457, 106.85607086262274], {
+        icon: gpsIcon,
       }).addTo(map);
+
+      // Create a circle with a radius of 100 meters (adjust as needed)
+      L.circle([-6.434691533069457, 106.85607086262274], {
+        color: 'blue',
+        fillColor: 'blue',
+        fillOpacity: 0.2,
+        radius: 200,
+      }).addTo(map);
+
+      var marker1 = L.marker([-6.434691533069457, 106.85607086262274]).addTo(
+        map,
+      );
     </script>
   </body>
 </html>

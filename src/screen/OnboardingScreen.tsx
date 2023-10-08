@@ -10,16 +10,6 @@ import {
 } from 'react-native';
 
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-// import Gaming from '../../assets/icon.png';
-
-// const MyImageComponent = () => {
-//   return (
-//     <Image
-//       source={{ uri: 'https://example.com/image.jpg' }}
-//       style={{ width: 100, height: 100 }}
-//     />
-//   );
-// }
 
 const screenWidth = Dimensions.get('window').width;
 const imageWidth = screenWidth * 0.8;

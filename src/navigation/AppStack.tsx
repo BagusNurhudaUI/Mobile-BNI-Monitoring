@@ -7,14 +7,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import Camera from '../screen/Camera';
 import GpsValidation from '../screen/GpsValidation';
 import UploadLaporan from '../screen/UploadLaporan';
-// import SplashScreen from '../components/SplashScreen';
-
-// import CustomDrawer from '../components/CustomDrawer';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import {createDrawerNavigator} from '@react-navigation/drawer';
-// const Drawer = createDrawerNavigator();
-
-// const Tab = createBottomTabNavigator();
+import LaporanResultDetail from '../screen/LaporanResultDetail';
 const Stack = createStackNavigator();
 
 export default function AppStack() {
@@ -40,6 +33,11 @@ export default function AppStack() {
       <Stack.Screen
         name="Camera"
         component={Camera}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="LaporanResultDetail"
+        component={LaporanResultDetail}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

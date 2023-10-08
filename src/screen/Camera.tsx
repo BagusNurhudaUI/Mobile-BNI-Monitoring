@@ -5,24 +5,32 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  BackHandler,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
 import Button from '../components/Button';
 import RNFS from 'react-native-fs';
-import {useNavigation} from '@react-navigation/native';
 
-// let options = {
-//   quality: 0.5,
-//   mirrorImage: false,
-// };
+// import Marker, {
+//   ImageFormat,
+//   Position,
+//   TextBackgroundType,
+// } from 'react-native-image-marker';
+
+let options = {
+  quality: 0.09,
+  orientation: 'portrait',
+  base64: false,
+  doNotSave: false,
+  exif: true,
+  forceUpOrientation: true,
+  fixOrientation: true,
+};
 
 export default function Camera({route, navigation}: any) {
-  // const navigation = useNavigation();
-  // const data = JSON.parse(route.params.data);
   const id_doc = route.params.data.id_jenis_dokumentasi;
-  console.log('ROUTE IN CAMERA', route.params.data.id_jenis_dokumentasi);
   const [{cameraRef}, {takePicture}] = useCamera(undefined);
   const [cameraPhoto, setCameraPhoto] = useState('');
   const [flashMode, setFlashMode] = useState(RNCamera.Constants.FlashMode.off);
@@ -46,23 +54,87 @@ export default function Camera({route, navigation}: any) {
 
   const captureHandle = async () => {
     try {
-      const data = await takePicture();
-      // console.log(data);
+      const data = await takePicture(options);
       setCameraPhoto(data.uri);
 
+      // const optionMarker = {
+      //   // background image
+      //   backgroundImage: {
+      //     src: require('./images/test.jpg'),
+      //     scale: 1,
+      //   },
+      //   watermarkTexts: [
+      //     {
+      //       text: 'text marker \n multline text',
+      //       positionOptions: {
+      //         position: Position.topLeft,
+      //       },
+      //       style: {
+      //         color: '#FC0700',
+      //         fontSize: 30,
+      //         fontName: 'Arial',
+      //         shadowStyle: {
+      //           dx: 10,
+      //           dy: 10,
+      //           radius: 10,
+      //           color: '#008F6D',
+      //         },
+      //         textBackgroundStyle: {
+      //           padding: '10% 10%',
+      //           type: TextBackgroundType.stretchY,
+      //           color: '#0FFF00',
+      //         },
+      //       },
+      //     },
+      //   ],
+      //   scale: 1,
+      //   quality: 100,
+      //   filename: 'test',
+      //   saveFormat: ImageFormat.png,
+      //   maxSize: 1000,
+      // };
+      // Marker.markText(optionMarker);
+      // console.log('MARKER ', Marker);
+
+      // Read the file as base64
+      const base64Data = await RNFS.readFile(data.uri, 'base64');
+
+      // Create a Blob from the base64 data
+      // const blob = new Blob([base64Data], {type: 'image/jpeg'});
+
+      const propertyName = `${id_doc}`;
+
+      const imageName = data.uri.split('/').pop();
+      const fileData = {
+        [propertyName]: {
+          uri: data.uri,
+          name: imageName,
+          type: 'image/jpeg', // Adjust the MIME type as needed
+        },
+      };
+
+      // console.log({fileData});
+
       navigation.navigate('UploadLaporan', {
-        params: {data: data.uri, id: id_doc},
+        params: {uri: data.uri, id: id_doc, data: fileData},
         screen: 'Camera',
       });
-      console.log('gagal');
     } catch (error) {
       console.log(error);
     }
   };
 
-  const openFlash = () => {
-    console.log('open flash');
+  const backAction = () => {
+    navigation.goBack();
+    return true;
   };
+
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', backAction);
+    };
+  }, []);
 
   return (
     <View style={styles.body}>
