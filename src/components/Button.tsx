@@ -7,7 +7,7 @@ import conn from '../helpers/const';
 export default function CustomButton({mode, style, labelStyle, ...props}: any) {
   return (
     <PaperButton
-      style={[styles.button, mode === 'outlined', style]}
+      style={[mode === 'outlined', style]}
       labelStyle={labelStyle}
       mode={mode}
       {...props}
@@ -16,11 +16,6 @@ export default function CustomButton({mode, style, labelStyle, ...props}: any) {
 }
 
 const styles = StyleSheet.create({
-  button: {
-    width: '100%',
-    marginVertical: 10,
-    paddingVertical: 2,
-  },
   text: {
     fontWeight: 'bold',
     fontSize: 15,

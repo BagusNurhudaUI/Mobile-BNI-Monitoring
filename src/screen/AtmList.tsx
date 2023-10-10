@@ -11,6 +11,7 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {launchCamera} from 'react-native-image-picker';
 import jenisDokumentasiRepo from '../api/jenisDokumentasiRepo';
@@ -23,17 +24,18 @@ import conn from '../helpers/const';
 import LoadingView from '../components/LoadingView';
 import axios from 'axios';
 import {api} from '../api/api';
+import AtmListDetail from '../components/AtmListDetail';
 
 export default function AtmList({navigation, route}: any) {
   const [assets, setAssets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState('');
-  // console.log('ROUTE IN HOME', route);
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     if (route?.params?.screen !== 'GPS') getAllATM();
-  //   }, []),
-  // );
+  console.log('ROUTE IN HOME', route);
+  useFocusEffect(
+    React.useCallback(() => {
+      getAllATM();
+    }, []),
+  );
 
   const getAllATM = async () => {
     console.log('fetch Get All ATM');
@@ -67,28 +69,45 @@ export default function AtmList({navigation, route}: any) {
     setIsLoading(false);
   };
   return (
+    // <KeyboardAvoidingView style={{flex: 1}} keyboardVerticalOffset={330}>
     <View style={{flex: 1}}>
       <SearchATM onSearch={handleSearch} />
-      <View
-        style={{
-          flex: 0.8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#F5FCFF',
-        }}>
-        <ScrollView>
-          <Text>Search result: {searchResult}</Text>
-          {isLoading ? (
+      {isLoading ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#FFFFFF',
+            width: Dimensions.get('window').width,
+          }}>
+          <LoadingView />
+        </View>
+      ) : (
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#FFFFFF',
+          }}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              padding: 10,
+            }}
+            style={{
+              width: Dimensions.get('window').width,
+            }}>
+            {/* <Text>Search result: {searchResult}</Text> */}
+
             <View
               style={{
                 flex: 1,
                 justifyContent: 'center',
                 alignItems: 'center',
+                gap: 5,
               }}>
-              <LoadingView />
-            </View>
-          ) : (
-            <>
               {assets
                 .filter((asset: any) => {
                   const searchRegex = new RegExp(searchResult, 'i'); // 'i' flag for case-insensitive search
@@ -97,9 +116,16 @@ export default function AtmList({navigation, route}: any) {
                   );
                 })
                 .map((asset: any, i) => (
-                  <Button
+                  <AtmListDetail
                     key={i}
-                    mode="outlined"
+                    style={{
+                      // width: 200,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      margin: 5,
+                      backgroundColor: conn.COLOR_WHITE_GREY,
+                    }}
+                    data={asset}
                     onPress={() => {
                       getAllATM();
 
@@ -116,14 +142,13 @@ export default function AtmList({navigation, route}: any) {
                         },
                         screen: 'AtmList',
                       });
-                    }}>
-                    {asset.name} - {asset.kode}
-                  </Button>
+                    }}></AtmListDetail>
                 ))}
-            </>
-          )}
-        </ScrollView>
-      </View>
+            </View>
+          </ScrollView>
+        </View>
+      )}
     </View>
+    // </KeyboardAvoidingView>
   );
 }

@@ -19,14 +19,16 @@ import {AssetModel, defaultAsset} from '../models/assetModel';
 import conn from '../helpers/const';
 import {WebView} from 'react-native-webview';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {AlertTwoButton} from '../components/Alert';
+import {AlertOneButton, AlertTwoButton} from '../components/Alert';
+import GetLocation from 'react-native-get-location';
+import LoadingView from '../components/LoadingView';
 
 const RANGE = 0.2; // range is in KM
 
 export default function GpsValidation({navigation, route}: any) {
   const [position, setPosition] = useState<{
-    latitude: string | null;
-    longitude: string | null;
+    latitude: number | null;
+    longitude: number | null;
   }>({
     latitude: null,
     longitude: null,
@@ -35,72 +37,88 @@ export default function GpsValidation({navigation, route}: any) {
   const [inRange, setInRange] = useState(false);
   const [gpsActive, setGpsActive] = useState(true);
   const [mylocation, setMyLocation] = useState(false);
+  const [needGPS, setNeedGPS] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const getCurrentPosition = () => {
-    Geolocation.getCurrentPosition(
-      (pos: any) => {
-        // console.log('LOKASI', pos.coords);
-
-        setPosition(pos.coords);
-      },
-      error => console.log(error),
-      {
+  const getCurrentPosition = async () => {
+    setIsLoading(true);
+    return new Promise<any>((resolve, reject) => {
+      GetLocation.getCurrentPosition({
         enableHighAccuracy: true,
-        // timeout: 20000,
-        // maximumAge: 1000,
-        // distanceFilter: 10,
-      },
-    );
+        timeout: 60000,
+      })
+        .then((location: any) => {
+          setPosition(location);
+          console.log('hit in position');
+          setIsLoading(false);
+          resolve(location);
+        })
+        .catch((error: any) => {
+          setPosition({
+            latitude: -6.365035000000001,
+            longitude: 106.82972833333334,
+          });
+          AlertOneButton('GPS Failed', 'GPS tidak dapat menemukan lokasi');
+          setIsLoading(false);
+          reject(error);
+        });
+    });
   };
 
   const getAtmById = async () => {
+    setIsLoading(true);
     console.log('getAtmById');
     try {
       const hasil = await assetRepo.getAssetById(route.params.asset.id_asset);
       setAsset(hasil.data.data);
       setGpsActive(hasil.data.data.gps_active);
+      console.log('hit in get atmById');
+      setIsLoading(false);
+      return hasil.data.data;
     } catch (err) {
+      setIsLoading(false);
       console.log(err);
+      return err;
     }
   };
 
   useEffect(() => {
-    getCurrentPosition();
-    getAtmById();
+    const hit = async () => {
+      try {
+        const deviceLoc = await getCurrentPosition();
+        const assetLoc = await getAtmById();
+        // console.log('hit in use effect', {assetLoc, deviceLoc});
+
+        isWithinRadius(
+          assetLoc!.latitude,
+          assetLoc!.longitude,
+          deviceLoc.latitude,
+          deviceLoc.longitude,
+          RANGE,
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    hit();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      getCurrentPosition();
-      isWithinRadius(
-        asset.latitude,
-        asset.longitude,
-        position?.latitude,
-        position?.longitude,
-        RANGE,
-      );
-      // console.log(' fetch radius: ' + hasil);
-      // console.log('is gps active: ' + gpsActive);
-    }, 1000);
+  const updateLocation = () => {
+    getCurrentPosition();
+    setMyLocation(!mylocation);
+  };
 
-    return () => clearInterval(interval);
-  });
+  // useEffect(() => {
+  //   let interval;
 
-  useEffect(() => {
-    const onBackPress = () => {
-      const data = {message: 'Hello from Screen A!'};
-      navigation.navigate('ATM', {
-        screen: 'GPS',
-      }); // Navigate to Screen B with data
-      return true;
-    };
+  //   if (!needGPS) {
+  //     interval = setInterval(() => {
+  //       getCurrentPosition();
+  //     }, 1000);
+  //   }
 
-    BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-    return () => {
-      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-    };
-  }, [navigation]);
+  //   return () => clearInterval(interval);
+  // });
 
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Radius of the Earth in kilometers
@@ -121,7 +139,7 @@ export default function GpsValidation({navigation, route}: any) {
     const distance = calculateDistance(lat1, lon1, lat2, lon2);
     const hasil = distance <= radius;
     console.log({lat1, lon1, lat2, lon2});
-    // console.log('HASIL RANGE: ' + distance + 'radius: ' + radius);
+    console.log('HASIL RANGE: ' + distance + 'radius: ' + radius);
 
     setInRange(hasil);
   }
@@ -204,7 +222,7 @@ export default function GpsValidation({navigation, route}: any) {
   `;
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <Image source={gps_icon} /> */}
+      {/* {isLoading && <LoadingView />} */}
       <WebView
         source={{
           html,
@@ -252,14 +270,14 @@ export default function GpsValidation({navigation, route}: any) {
           zIndex: 1,
           width: 40,
           height: 40,
-          borderColor: 'black', // Added borderColor
-          borderWidth: 1, // Added borderWidth
-          borderRadius: 10, // Added borderRadius (half of width and height to make it circular)
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 10,
           overflow: 'hidden',
         }}>
         <TouchableOpacity
           onPress={() => {
-            setMyLocation(!mylocation);
+            updateLocation();
           }}
           style={{
             width: '100%',
